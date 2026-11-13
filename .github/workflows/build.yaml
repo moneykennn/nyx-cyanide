@@ -1,0 +1,48 @@
+name: Build Cyanide
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build iOS App
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Test Nyx native geometry and script
+        shell: bash
+        run: |
+          set -euo pipefail
+          for test in projection world capture player frame_json; do
+            clang++ -std=c++17 -Wall -Wextra -Werror -pedantic \
+              -fsanitize=undefined -fno-sanitize-recover=all \
+              -I Cyanide/nyx "tests/nyx/test_${test}.cpp" -o "/tmp/nyx-${test}"
+            "/tmp/nyx-${test}" > "/tmp/nyx-${test}.out"
+          done
+          python3 -c 'import json; a,b,c=[json.loads(x) for x in open("/tmp/nyx-frame_json.out")]; assert a["status"]=="ready" and a["lines"]==[[500,250,500,200]]; assert b["status"]=="stale" and not b["lines"]; assert c["status"]=="invalid" and not c["lines"]'
+          node --check nyx-repo/esp-experimental.js
+          node tests/nyx/test-esp.cjs
+
+      - name: Make build script executable
+        run: chmod +x ./build.sh ./scripts/build.sh ./scripts/gen-changelog.sh
+
+      - name: Compile Cyanide (Unsigned)
+        run: ./build.sh
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Cyanide-TweakRunner
+          path: build/Cyanide.ipa
+          retention-days: 7

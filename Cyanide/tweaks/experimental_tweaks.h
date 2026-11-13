@@ -1,0 +1,27 @@
+//
+//  experimental_tweaks.h
+//  Cyanide
+//
+//  Experimental and beta tweak APIs are part of the public source tree.
+//
+
+#ifndef experimental_tweaks_h
+#define experimental_tweaks_h
+
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "location_sim.h"
+#include "call_recording_sound.h"
+
+#import "experimental/stagestrip.h"
+#import "experimental/fastlockx_lite.h"
+
+#define CYANIDE_EXPERIMENTAL_TWEAKS_AVAILABLE 1
+
+static inline bool cyanide_experimental_tweaks_available(void)
+{
+    return true;
+}
+
+#endif /* experimental_tweaks_h */

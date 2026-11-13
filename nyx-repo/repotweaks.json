@@ -1,0 +1,16 @@
+{
+  "repoName": "Nyx Cyanide Prototypes",
+  "tweaks": [
+    {
+      "id": "nyx.overlay.esp-experimental",
+      "name": "Nyx ESP (experimental)",
+      "version": "0.1.0-b05f20b19b06",
+      "description": "Requires the unverified custom Cyanide-Nyx fork; will not work on stock Cyanide. No anti-ban guarantee.",
+      "scriptURL": "https://raw.githubusercontent.com/moneykennn/nyx-cyanide/main/nyx-repo/esp-experimental.js",
+      "symbol": "rectangle.on.rectangle",
+      "minIOS": "17.5.1",
+      "maxIOS": "17.5.1",
+      "compatibilityNote": "Target: iPhone SE 3 on iOS 17.5.1. Device behavior has not been verified."
+    }
+  ]
+}
