@@ -1,11 +1,11 @@
 #import "NYXBridge.h"
-#import "CyanideSession.hpp"
-#include "FrameJson.hpp"
 #include <atomic>
 #include <chrono>
 #include <memory>
 #include <mutex>
 #include <string>
+#include "FrameJson.hpp"
+#import "CyanideSession.hpp"
 
 namespace {
 enum class State { stopped, starting, ready, stopping };

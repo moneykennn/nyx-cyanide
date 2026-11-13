@@ -4,9 +4,9 @@
 #error "CyanideSession.hpp requires Objective-C++"
 #endif
 #import <Foundation/Foundation.h>
-#import "../TaskRop/RemoteCall.h"
 #include "CyanideCaptureAdapter.hpp"
 #include <memory>
+#import "../TaskRop/RemoteCall.h"
 
 namespace nyx {
 enum class SessionStatus { stopped, ready, attachFailed, imageUnavailable, unsupportedBuild, verifyFailed, cleanupFailed };
