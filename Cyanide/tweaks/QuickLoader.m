@@ -5,6 +5,7 @@
 #import <JavaScriptCore/JavaScriptCore.h>
 
 #import "QuickLoader.h"
+#import "../nyx/NYXBridge.h"
 #import "RepoTweaks.h"
 #import "remote_objc.h"
 #import "../TaskRop/RemoteCall.h"
@@ -377,6 +378,7 @@ static dispatch_source_t quickloader_remove_timer(NSMutableDictionary *timers,
 }
 
 static void quickloader_abandon_js_queue_after_timeout(const char *reason, BOOL shuttingDown) {
+    NYXStop(@"nyx.quickloader");
     NSMutableDictionary *abandonedRegistry = nil;
     NSArray *abandonedSources = nil;
 
@@ -498,6 +500,9 @@ bool quickloader_apply_in_session() {
 bool quickloader_run_js_string(NSString *jsCode) {
     if (!jsCode || jsCode.length == 0) return false;
 
+    // Replacing the QuickLoader context must also stop its previous capture.
+    NYXStop(@"nyx.quickloader");
+
     __block bool ok = true;
     uint64_t runGeneration = quickloader_begin_run_generation();
     bool completed = quickloader_perform_sync_timeout(^{
@@ -518,6 +523,17 @@ bool quickloader_run_js_string(NSString *jsCode) {
         context.exceptionHandler = ^(JSContext *ctx, JSValue *exception) {
             log_user("[JS ERROR] %s\n", [[exception toString] UTF8String]);
         };
+
+        // Repo packages installed through QuickLoader execute in this context.
+        context[@"nyx_start"] = ^NSNumber*{
+            if (!quickloader_generation_is_active(runGeneration)) return @(NO);
+            return @(NYXStart(@"nyx.quickloader"));
+        };
+        context[@"nyx_frame"] = ^NSString*(JSValue *width, JSValue *height) {
+            if (!quickloader_generation_is_active(runGeneration)) return @"{\"status\":\"stopped\",\"lines\":[]}";
+            return NYXFrame(@"nyx.quickloader",[width toUInt32],[height toUInt32]);
+        };
+        context[@"nyx_stop"] = ^{ NYXStop(@"nyx.quickloader"); };
 
         // Timers target the same serial queue as the JSContext. JavaScriptCore
         // contexts are not safe to touch concurrently, and SpringBoard
@@ -720,6 +736,7 @@ bool quickloader_run_js_string(NSString *jsCode) {
 // Teardown engine
 // ==========================================
 bool quickloader_stop_in_session(void) {
+    NYXStop(@"nyx.quickloader");
     //Order timers to stop
     quickloader_set_shutting_down(YES);
     uint64_t stopGeneration = quickloader_current_generation();

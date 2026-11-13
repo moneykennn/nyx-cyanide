@@ -33,6 +33,7 @@ jobs:
           python3 -c 'import json; a,b,c=[json.loads(x) for x in open("/tmp/nyx-frame_json.out")]; assert a["status"]=="ready" and a["lines"]==[[500,250,500,200]]; assert b["status"]=="stale" and not b["lines"]; assert c["status"]=="invalid" and not c["lines"]'
           node --check nyx-repo/esp-experimental.js
           node tests/nyx/test-esp.cjs
+          python3 tests/nyx/test_wiring.py
 
       - name: Make build script executable
         run: chmod +x ./build.sh ./scripts/build.sh ./scripts/gen-changelog.sh
