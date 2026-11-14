@@ -5153,6 +5153,15 @@ static int init_remote_call_internal(const char* process, bool useMigFilterBypas
     bool gotFirstTrap = false;
 
     for (int armAttempt = 1; armAttempt <= kMaxArmAttempts && !gotFirstTrap; armAttempt++) {
+        // A fresh walk cannot succeed with no time left to receive its trap.
+        // Avoid arming target threads when the preceding waits used the budget.
+        if (totalWaitedMS >= firstExceptionTimeoutMS) {
+            printf("[RC] init: first-exception wait budget exhausted before arm attempt %d/%d\n",
+                   armAttempt, kMaxArmAttempts);
+            remote_call_note_init_failure(RemoteCallInitFailureFirstExceptionTimeout, targetPid);
+            abandon_remote_call();
+            return -1;
+        }
         // Round 24: the gate can close between entry and any attempt (a lock /
         // background lands mid-init). Arming is refused deterministically in
         // that state — fail FAST instead of storm-retrying (142628: 3 attempts
@@ -5633,7 +5642,8 @@ static int init_remote_call_internal(const char* process, bool useMigFilterBypas
            "un-arming, %s\n",
            armAttempt, kMaxArmAttempts, waitedMS,
            (unsigned long)g_RC_threadList.count,
-           armAttempt < kMaxArmAttempts ? "retrying with a fresh walk" : "giving up");
+           armAttempt < kMaxArmAttempts && totalWaitedMS < firstExceptionTimeoutMS
+               ? "retrying with a fresh walk" : "giving up");
     for (NSNumber *thread in g_RC_threadList) {
         uint64_t tried = thread.unsignedLongLongValue;
         clear_guard_exception(tried);
